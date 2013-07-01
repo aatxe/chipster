@@ -1,0 +1,3 @@
+[submodule "src/minuet"]
+	path = src/minuet
+	url = git://github.com/aaronweiss74/minuet.git
