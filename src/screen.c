@@ -1,4 +1,5 @@
 #include <SDL/SDL.h>
+#include <stdlib.h>
 #include "screen.h"
 
 SDL_Surface* screen;
@@ -12,14 +13,9 @@ int init() {
 
 void setup(screen_type type) {
 	screen = SDL_SetVideoMode(64 * scale * type, 32 * scale * type, 8, SDL_SWSURFACE);
-	SDL_Color Colors[2] = { COLOR_LOW, COLOR_HIGH };
-	SDL_SetColors(Screen, Colors, 0, 2);
+	SDL_Color Colors[2] = { {0, 0, 0, 255}, {255, 255, 255, 255} };
+	SDL_SetColors(screen, Colors, 0, 2);
 	m_type = type;
-}
-
-void update(uint8_t fb[]) {
-	update_keys();
-	update_screen(fb);
 }
 
 void update_keys() {
@@ -28,7 +24,7 @@ void update_keys() {
 		int key_value = 0;
 		switch (e.type) {
 		case SDL_QUIT:
-			std::exit(0);
+			exit(0);
 			break;
 		case SDL_KEYDOWN:
 			key_value = 1;
@@ -82,6 +78,8 @@ void update_keys() {
 			case SDLK_v:
 				keys[0xF] = key_value;
 				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -90,18 +88,25 @@ void update_keys() {
 key_state get_key(uint8_t k) {
 	check(k < 0x10, "Invalid key: %x", k);
 	return keys[k];
+error:
+	return KEY_UP;
 }
 
-void update_screen(uint8_t fb[]) {
+void update_screen(uint8_t *fb) {
 	SDL_Rect b = {0, 0, scale, scale};
 	for (uint16_t y = 0; y < 32 * m_type; ++y) {
 		b.y = y * scale;
 		for (uint16_t x = 0; x < 64 * m_type; ++x) {
 			b.x = x * scale;
-			SDL_FillRect(screen, &b, screen_buf[y * (64 * m_type) + x]);
+			SDL_FillRect(screen, &b, fb[y * (64 * m_type) + x]);
 		}
 	}
-	SDL_Flip(Screen);
+	SDL_Flip(screen);
+}
+
+void update(uint8_t *fb) {
+	update_keys();
+	update_screen(fb);
 }
 
 void sync() {

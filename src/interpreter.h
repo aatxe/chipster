@@ -30,11 +30,11 @@ const uint8_t font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
 							 0xF0, 0x80, 0xF0, 0x80, 0xF0,
 							 0xF0, 0x80, 0xF0, 0x80, 0x80 };
 							
-extern uint8_t framebuf[];
+extern uint8_t *framebuf;
 							 
 typedef struct {
-	uint8_t[base_addr] interpreter; // Interpreter Space
-	uint8_t[0xFFF - base_addr] rom; // Program Space
+	uint8_t interpreter[base_addr]; // Interpreter Space
+	uint8_t rom[0xFFF - base_addr]; // Program Space
 } Memory;
 
 typedef uint8_t await_key_register;
