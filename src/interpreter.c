@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include "interpreter.h"
 #include "screen.h"
@@ -12,7 +11,7 @@ uint16_t *stack[0x10]; // Stack
 uint8_t *I; // Memory-Access Register 
 uint8_t V[0x10]; // Registers
 uint8_t dt, st; // Timers (Delay and Sound)
-FrameBuf *framebuf; // Frame Buffer
+uint8_t *framebuf; // Frame Buffer
 screen_type m_type; // Screen Type
 await_key_register await_reg; // Awaiting Key Register, 0x10 if none.
 
@@ -29,28 +28,30 @@ const uint8_t font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x2
 0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80 };
 
 int load(char *path) {
+	FILE* rom;
+	uint8_t * p;
+	
 	// Loads fonts into interpreter space.
 	uint8_t* d = (&mem)->interpreter;
 	for (; d < (&mem)->interpreter + 0x50; d++)
 		*d = font[d - (&mem)->interpreter];
 	
 	// Loads specified ROM into program space.
-	FILE* rom = fopen(path, "r");
+	rom = fopen(path, "r");
 	check(rom != NULL, "Failed to load ROM: %s\n", path);
-	uint8_t* p = (&mem)->rom;
+	p = (&mem)->rom;
 	while(fread(p++, sizeof(uint8_t), 1, rom));
 	fclose(rom);
 	
 	// Allocates frame buffer for rendering.
-	framebuf = malloc(sizeof(uint8_t) * 64 * 32 + sizeof(uint16_t));
+	framebuf = (uint8_t*) malloc(sizeof(uint8_t) * 64 * 32);
 	check_mem(framebuf);
-	framebuf->length = sizeof(uint8_t) * 64 * 32;
 	
 	// Other initialization stuffs.
 	m_type = SCREEN_LOW;
 	setup(m_type);
 	await_reg = 0x10;
-	pc = (uint16_t*) ((uint8_t*) &mem + 0x200);
+	pc = (uint16_t*) (&mem)->rom;
 	return 1;
 error:
 	fclose(rom);
@@ -62,25 +63,32 @@ void regen_frame_buffer(screen_type type) {
 	free(framebuf);
 	framebuf = malloc(sizeof(uint8_t) * 64 * 32 * type * type);
 	check_mem(framebuf);
-	framebuf->length = sizeof(uint8_t) * 64 * 32 * type * type;
 error:
 	return;
 }
 
 void interpret() {
-	uint16_t instr = *pc;
-	// nnn is the last 12-bits of the instruction
-	uint16_t nnn = instr & 0xFFF;
-	// kk is the last 8-bits of the instruction
-	uint8_t kk = instr & 0xFF;
-	// nX are individual nibbles (4-bit segments) of the instruction
-	uint8_t n1 = instr >> 12;
-	uint8_t n2 = (instr >> 8) & 0xF;
-	uint8_t n3 = (instr >> 4) & 0xF;
-	uint8_t n4 = instr & 0xF;
+	// Data stuffs for interpretation.
+	uint16_t instr;
+	uint16_t nnn;
+	uint8_t kk;
+	uint8_t n1, n2, n3, n4;
 	// States used within certain instruction interpretations.
 	uint16_t s;
-	uint8_t* i = I;
+	uint8_t* i;
+	uint16_t k;
+	instr = *pc >> 8 | *pc << 8;
+	pc++; // increment pc here because of jumps and stuff
+	// nnn is the last 12-bits of the instruction
+	nnn = instr & 0xFFF;
+	// kk is the last 8-bits of the instruction
+	kk = instr & 0xFF;
+	// nX are individual nibbles (4-bit segments) of the instruction
+	n1 = instr >> 12;
+	n2 = (instr >> 8) & 0xF;
+	n3 = (instr >> 4) & 0xF;
+	n4 = instr & 0xF;
+	i = I;
 	switch (n1) {
 	case 0x0:
 		switch (n2) {
@@ -90,7 +98,7 @@ void interpret() {
 				switch (n4) {
 				case 0x0:
 					// CLS
-					memset(framebuf, 0, framebuf->length);
+					for (k = 0; k < sizeof(framebuf) / sizeof(uint8_t); k++) framebuf[k] = 0;
 					break;
 					
 				case 0xE:
@@ -246,8 +254,8 @@ void interpret() {
 		// DRW Vx, Vy, nibble
 		s = V[n3] * (64 * m_type) + V[n2];
 		for (; i < I + n4; i++) {
-			V[0xF] &= ((*i ^ framebuf->buf[s + i - I]) == 0) ? 0x1 : 0x0;
-			framebuf->buf[s + i - I] ^= *i;
+			V[0xF] &= ((*i ^ framebuf[s + i - I]) == 0) ? 0x1 : 0x0;
+			framebuf[s + i - I] ^= *i;
 		}
 		break;
 		
@@ -326,7 +334,6 @@ void interpret() {
 	}
 	if (dt > 0) dt--;
 	if (st > 0) st--;
-	pc++;
 }
 
 int is_awaiting_keystroke() {

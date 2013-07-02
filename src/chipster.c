@@ -11,7 +11,8 @@ int main(int argc, char *argv[]) {
 	for (;;) {
 		if (is_awaiting_keystroke()) {
 			update_keys();
-			for (uint8_t i = 0; i < 0x10; i++) if (get_key(i)) send_key(i);
+			uint8_t i;
+			for (i = 0; i < 0x10; i++) if (get_key(i)) send_key(i);
 		} else {
 			interpret();
 			update(framebuf);
