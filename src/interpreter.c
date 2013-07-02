@@ -143,17 +143,17 @@ void interpret() {
 		
 	case 0x3:
 		// SE Vx, byte
-		if (V[n2] == kk) pc += 2;
+		if (V[n2] == kk) pc++;
 		break;
 		
 	case 0x4:
 		// SNE Vx, byte
-		if (V[n2] != kk) pc += 2;
+		if (V[n2] != kk) pc++;
 		break;
 		
 	case 0x5:
 		// SE Vx, Vy
-		if (V[n2] == V[n3]) pc += 2;
+		if (V[n2] == V[n3]) pc++;
 		break;
 		
 	case 0x6:
@@ -220,7 +220,7 @@ void interpret() {
 		
 	case 0x9:
 		// SNE Vx, Vy
-		if (V[n2] != V[n3]) pc += 2;
+		if (V[n2] != V[n3]) pc++;
 		break;
 		
 	case 0xA:
@@ -251,12 +251,12 @@ void interpret() {
 		switch (kk) {
 		case 0x9E:
 			// SKP Vx
-			if (get_key(V[n2])) pc += 2;
+			if (get_key(V[n2])) pc++;
 			break;
 			
 		case 0xA1:
 			// SKNP Vx
-			if (!get_key(V[n2])) pc += 2;
+			if (!get_key(V[n2])) pc++;
 			break;
 			
 		default:
@@ -320,6 +320,9 @@ void interpret() {
 	default:
 		debug("Unknown instruction: %X\n", instr);
 	}
+	if (dt > 0) dt--;
+	if (st > 0) st--;
+	pc++;
 }
 
 int is_awaiting_keystroke() {
