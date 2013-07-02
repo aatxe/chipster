@@ -4,6 +4,7 @@
 SDL_Surface* screen;
 screen_type m_type;
 key_state keys[0x10];
+uint32_t last_updated;
 
 int init() {
     return SDL_Init(SDL_INIT_VIDEO);
@@ -101,4 +102,11 @@ void update_screen(uint8_t fb[]) {
 		}
 	}
 	SDL_Flip(Screen);
+}
+
+void sync() {
+	uint32_t diff = SDL_GetTicks() - last_updated;
+	if (diff < tick_length)
+		SDL_Delay(tick_length - diff);
+	last_updated = SDL_GetTicks();
 }

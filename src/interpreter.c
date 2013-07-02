@@ -27,7 +27,7 @@ int load(char *path) {
 	
 	// Loads specified ROM into program space.
 	FILE rom = fopen(path, 'r');
-	check(rom != NULL, "Failed to load rom: %s", path);
+	check(rom != NULL, "Failed to load ROM: %s", path);
 	uint_8* p = mem->rom;
 	while(fread(++p, sizeof(uint8_t), 1, rom));
 	fclose(rom);
@@ -37,6 +37,7 @@ int load(char *path) {
 	
 	// Other initialization stuffs.
 	m_type = SCREEN_LOW;
+	setup_screen(m_type);
 	await_reg = 0x10;
 	return 1;
 error:
@@ -317,4 +318,5 @@ void send_key(uint8_t key) {
 	check_debug(await_reg < 0x10, "Received key whilst not awaiting a keypress.");
 	V[await_reg] = key;
 	await_reg = 0x10;
+error:
 }
