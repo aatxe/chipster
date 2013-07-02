@@ -4,9 +4,6 @@
 #include <stdint.h>
 #include "minuet/minuet.h"
 
-const uint16_t scale = 0x4; // Display Scale
-const uint32_t tick_length = 1000 / 60; // milliseconds per tick
-
 typedef enum { SCREEN_LOW = 1, SCREEN_HIGH } screen_type; 
 typedef enum { KEY_UP, KEY_DOWN } key_state;
 

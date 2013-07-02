@@ -7,6 +7,9 @@ screen_type m_type;
 key_state keys[0x10];
 uint32_t last_updated;
 
+const uint16_t scale = 0x4; // Display Scale
+const uint32_t tick_length = 1000 / 60; // milliseconds per tick
+
 int init() {
     return SDL_Init(SDL_INIT_VIDEO);
 }
@@ -86,7 +89,7 @@ void update_keys() {
 }
 
 key_state get_key(uint8_t k) {
-	check(k < 0x10, "Invalid key: %x", k);
+	check(k < 0x10, "Invalid key: %x\n", k);
 	return keys[k];
 error:
 	return KEY_UP;

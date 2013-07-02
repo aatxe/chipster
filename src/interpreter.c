@@ -19,6 +19,14 @@ await_key_register await_reg; // Awaiting Key Register, 0x10 if none.
 	_Static_assert(sizeof(mem) == 0xFFF)
 #endif
 
+// System Font Sprites
+const uint8_t font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70,
+0xF0, 0x10, 0xF0, 0x80, 0xF0, 0xF0, 0x10, 0xF0, 0x10, 0xF0, 0x90, 0x90, 0xF0, 0x10, 0x10, 
+0xF0, 0x80, 0xF0, 0x10, 0xF0, 0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40,
+0xF0, 0x90, 0xF0, 0x90, 0xF0, 0xF0, 0x90, 0xF0, 0x10, 0xF0, 0xF0, 0x90, 0xF0, 0x90, 0x90,
+0xE0, 0x90, 0xE0, 0x90, 0xE0, 0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0,
+0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80 };
+
 int load(char *path) {
 	// Loads fonts into interpreter space.
 	uint8_t* d = (&mem)->interpreter;
@@ -27,7 +35,7 @@ int load(char *path) {
 	
 	// Loads specified ROM into program space.
 	FILE* rom = fopen(path, "r");
-	check(rom != NULL, "Failed to load ROM: %s", path);
+	check(rom != NULL, "Failed to load ROM: %s\n", path);
 	uint8_t* p = (&mem)->rom;
 	while(fread(++p, sizeof(uint8_t), 1, rom));
 	fclose(rom);
@@ -108,11 +116,11 @@ void interpret() {
 					break;
 
 				default:
-					debug("Unknown instruction: %X", instr);	
+					debug("Unknown instruction: %X\n", instr);	
 				}
 				
 			default:
-				debug("Unknown instruction: %X", instr);	
+				debug("Unknown instruction: %X\n", instr);	
 			}
 			break;
 			
@@ -206,7 +214,7 @@ void interpret() {
 			break;
 			
 		default:
-			debug("Unknown instruction: %X", instr);
+			debug("Unknown instruction: %X\n", instr);
 		}
 		break;
 		
@@ -252,7 +260,7 @@ void interpret() {
 			break;
 			
 		default:
-			debug("Unknown instruction: %X", instr);
+			debug("Unknown instruction: %X\n", instr);
 		}
 		break;
 		
@@ -305,12 +313,12 @@ void interpret() {
 			for (; i < I + n2; i++) V[i - I] = *i;
 			
 		default:
-			debug("Unknown instruction: %X", instr);
+			debug("Unknown instruction: %X\n", instr);
 		}
 		break;
 		
 	default:
-		debug("Unknown instruction: %X", instr);
+		debug("Unknown instruction: %X\n", instr);
 	}
 }
 
@@ -319,7 +327,7 @@ int is_awaiting_keystroke() {
 }
 
 void send_key(uint8_t key) {
-	check_debug(await_reg < 0x10, "Received key whilst not awaiting a keypress.");
+	check_debug(await_reg < 0x10, "Received key whilst not awaiting a keypress.\n");
 	V[await_reg] = key;
 	await_reg = 0x10;
 error:
