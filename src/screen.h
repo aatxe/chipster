@@ -2,7 +2,7 @@
 #define __screen_h__
 
 #include <stdint.h>
-#include "src/minuet.h"
+#include "minuet/minuet.h"
 
 const uint16_t scale = 0x4; // Display Scale
 const uint32_t tick_length = 1000 / 60; // milliseconds per tick

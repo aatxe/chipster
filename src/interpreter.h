@@ -2,7 +2,7 @@
 #define __interpreter_h__
 
 #include <stdint.h>
-#include "src/minuet.h"
+#include "minuet/minuet.h"
 
 // Compatability for non-clang compilers
 #ifndef __has_feature
