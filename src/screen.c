@@ -95,19 +95,19 @@ error:
 	return KEY_UP;
 }
 
-void update_screen(uint8_t *fb) {
+void update_screen(FrameBuf *fb) {
 	SDL_Rect b = {0, 0, scale, scale};
 	for (uint16_t y = 0; y < 32 * m_type; ++y) {
 		b.y = y * scale;
 		for (uint16_t x = 0; x < 64 * m_type; ++x) {
 			b.x = x * scale;
-			SDL_FillRect(screen, &b, fb[y * (64 * m_type) + x]);
+			SDL_FillRect(screen, &b, fb->buf[y * (64 * m_type) + x]);
 		}
 	}
 	SDL_Flip(screen);
 }
 
-void update(uint8_t *fb) {
+void update(FrameBuf *fb) {
 	update_keys();
 	update_screen(fb);
 	check(SDL_GetError(), "Something went wrong: %s", SDL_GetError());

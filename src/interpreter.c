@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include "interpreter.h"
 #include "screen.h"
@@ -11,7 +12,7 @@ uint16_t *stack[0x10]; // Stack
 uint8_t *I; // Memory-Access Register 
 uint8_t V[0x10]; // Registers
 uint8_t dt, st; // Timers (Delay and Sound)
-uint8_t *framebuf; // Frame Buffer
+FrameBuf *framebuf; // Frame Buffer
 screen_type m_type; // Screen Type
 await_key_register await_reg; // Awaiting Key Register, 0x10 if none.
 
@@ -37,17 +38,19 @@ int load(char *path) {
 	FILE* rom = fopen(path, "r");
 	check(rom != NULL, "Failed to load ROM: %s\n", path);
 	uint8_t* p = (&mem)->rom;
-	while(fread(++p, sizeof(uint8_t), 1, rom));
+	while(fread(p++, sizeof(uint8_t), 1, rom));
 	fclose(rom);
 	
 	// Allocates frame buffer for rendering.
-	framebuf = malloc(sizeof(uint8_t) * 64 * 32);
+	framebuf = malloc(sizeof(uint8_t) * 64 * 32 + sizeof(uint16_t));
 	check_mem(framebuf);
+	framebuf->length = sizeof(uint8_t) * 64 * 32;
 	
 	// Other initialization stuffs.
 	m_type = SCREEN_LOW;
 	setup(m_type);
 	await_reg = 0x10;
+	pc = (uint16_t*) ((uint8_t*) &mem + 0x200);
 	return 1;
 error:
 	fclose(rom);
@@ -59,6 +62,7 @@ void regen_frame_buffer(screen_type type) {
 	free(framebuf);
 	framebuf = malloc(sizeof(uint8_t) * 64 * 32 * type * type);
 	check_mem(framebuf);
+	framebuf->length = sizeof(uint8_t) * 64 * 32 * type * type;
 error:
 	return;
 }
@@ -86,7 +90,7 @@ void interpret() {
 				switch (n4) {
 				case 0x0:
 					// CLS
-					for (uint16_t i = 0; i < sizeof(framebuf) / sizeof(uint8_t); i++) framebuf[i] = 0;
+					memset(framebuf, 0, framebuf->length);
 					break;
 					
 				case 0xE:
@@ -242,8 +246,8 @@ void interpret() {
 		// DRW Vx, Vy, nibble
 		s = V[n3] * (64 * m_type) + V[n2];
 		for (; i < I + n4; i++) {
-			V[0xF] &= ((*i ^ framebuf[s + i - I]) == 0) ? 0x1 : 0x0;
-			framebuf[s + i - I] ^= *i;
+			V[0xF] &= ((*i ^ framebuf->buf[s + i - I]) == 0) ? 0x1 : 0x0;
+			framebuf->buf[s + i - I] ^= *i;
 		}
 		break;
 		

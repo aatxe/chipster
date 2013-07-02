@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "minuet/minuet.h"
+#include "screen.h"
 
 // Compatability for non-clang compilers
 #ifndef __has_feature
@@ -12,7 +13,7 @@
 // Base Address for Program Space
 #define BASE_ADDR 0x200
 							
-extern uint8_t *framebuf;
+extern FrameBuf *framebuf;
 							 
 typedef struct {
 	uint8_t interpreter[BASE_ADDR]; // Interpreter Space
