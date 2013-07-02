@@ -2,16 +2,18 @@
 #define __interpreter_h__
 
 #include <stdint.h>
+#include "src/minuet.h"
 
-// Compatability for non-Clang compilers.
+// Compatability for non-clang compilers
 #ifndef __has_feature
 	#define __has_feature(x) 0
 #endif
 
+// Base Address for Program Space
 const uint16_t base_addr = 0x200;
 
 // System Font Sprites
-const uint8_t Font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
+const uint8_t font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
 							 0x20, 0x60, 0x20, 0x20, 0x70,
 							 0xF0, 0x10, 0xF0, 0x80, 0xF0,
 							 0xF0, 0x10, 0xF0, 0x10, 0xF0,
@@ -27,13 +29,19 @@ const uint8_t Font[0x50] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
 							 0xE0, 0x90, 0x90, 0x90, 0xE0,
 							 0xF0, 0x80, 0xF0, 0x80, 0xF0,
 							 0xF0, 0x80, 0xF0, 0x80, 0x80 };
-
+							
+extern uint8_t framebuf[];
+							 
 typedef struct {
 	uint8_t[base_addr] interpreter; // Interpreter Space
 	uint8_t[0xFFF - base_addr] rom; // Program Space
 } Memory;
 
+typedef uint8_t await_key_register;
+
 int load(char *path);
 void interpret();
+int is_awaiting_keystroke();
+void send_key(uint8_t key);
 
 #endif

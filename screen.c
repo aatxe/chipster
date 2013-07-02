@@ -5,17 +5,20 @@ SDL_Surface* screen;
 screen_type m_type;
 key_state keys[0x10];
 
+int init() {
+    return SDL_Init(SDL_INIT_VIDEO);
+}
+
 void setup(screen_type type) {
-    SDL_Init(SDL_INIT_VIDEO);
 	screen = SDL_SetVideoMode(64 * scale * type, 32 * scale * type, 8, SDL_SWSURFACE);
 	SDL_Color Colors[2] = { COLOR_LOW, COLOR_HIGH };
 	SDL_SetColors(Screen, Colors, 0, 2);
 	m_type = type;
 }
 
-void update(uint8_t screen_buf[][]) {
+void update(uint8_t fb[]) {
 	update_keys();
-	update_screen(screen_buf);
+	update_screen(fb);
 }
 
 void update_keys() {
@@ -83,13 +86,18 @@ void update_keys() {
 	}
 }
 
-void update_screen(uint8_t screen_buf[][]) {
+key_state get_key(uint8_t k) {
+	check(k < 0x10, "Invalid key: %x", k);
+	return keys[k];
+}
+
+void update_screen(uint8_t fb[]) {
 	SDL_Rect b = {0, 0, scale, scale};
 	for (uint16_t y = 0; y < 32 * m_type; ++y) {
 		b.y = y * scale;
 		for (uint16_t x = 0; x < 64 * m_type; ++x) {
 			b.x = x * scale;
-			SDL_FillRect(screen, &b, screen_buf[x][y]);
+			SDL_FillRect(screen, &b, screen_buf[y * (64 * m_type) + x]);
 		}
 	}
 	SDL_Flip(Screen);

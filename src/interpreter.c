@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "interpreter.h"
+#include "screen.h"
 
 uint16_t* pc; // Program Counter
 Memory mem; // System memory
@@ -10,6 +11,9 @@ uint16_t* stack[0x10]; // Stack
 uint8_t* I; // Memory-Access Register 
 uint8_t V[0x10]; // Registers
 uint8_t dt, st; // Timers (Delay and Sound)
+uint8_t framebuf[]; // Frame Buffer
+screen_type m_type; // Screen Type
+await_key_register await_reg; // Awaiting Key Register, 0x10 if none.
 
 #if __has_feature(c_static_assert)
 	_Static_assert(sizeof(mem) == 0xFFF)
@@ -27,9 +31,17 @@ int load(char *path) {
 	uint_8* p = mem->rom;
 	while(fread(++p, sizeof(uint8_t), 1, rom));
 	fclose(rom);
+	
+	// Allocates frame buffer for rendering.
+	framebuf = malloc(sizeof(uint8_t) * 64 * 32);
+	
+	// Other initialization stuffs.
+	m_type = SCREEN_LOW;
+	await_reg = 0x10;
 	return 1;
 error:
 	fcloseall();
+	free(framebuf);
 	return 0;
 }
 
@@ -53,17 +65,47 @@ void interpret() {
 				switch (n4) {
 				case 0x0:
 					// CLS
+					for (uint16_t i = 0; i < sizeof(framebuf) / sizeof(uint8_t); i++) framebuf[i] = 0;
 					break;
 					
 				case 0xE:
 					// RET
+					pc = stack[si--];
 					break;
 				}
+				
+			case 0xF:
+				switch (n4) {
+				case 0xD:
+					// EXIT
+					exit(0);
+					
+				case 0xE:
+					// LOW
+					m_type = SCREEN_LOW;
+					regen_frame_buffer(SCREEN_LOW);
+					setup_screen(SCREEN_LOW);
+					break;
+					
+				case 0xF:
+					// HIGH
+					m_type = SCREEN_HIGH;
+					regen_frame_buffer(SCREEN_HIGH);
+					setup_screen(SCREEN_HIGH);
+					break;
+
+				default:
+					debug("Unknown instruction: %X", instr);	
+				}
+				
+			default:
+				debug("Unknown instruction: %X", instr);	
 			}
 			break;
 			
 			default:
 			// SYS addr
+			// Intentionally ignored.
 		}
 		break;
 		
@@ -122,13 +164,13 @@ void interpret() {
 			
 		case 0x4:
 			// ADD Vx, Vy
-			V[0xF] = (V[n2] + V[n3] > 0xFFF) ? 1 : 0;
+			V[0xF] = (V[n2] + V[n3] > 0xFFF) ? 0x1 : 0x0;
 			V[n2] = (V[n2] + V[n3]) & 0xFFF;
 			break;
 			
 		case 0x5:
 			// SUB Vx, Vy
-			V[0xF] = (V[n2] > V[n3]) ? 1 : 0;
+			V[0xF] = (V[n2] > V[n3]) ? 0x1 : 0x0;
 			V[n2] -= V[n3];
 			break;
 			
@@ -140,7 +182,7 @@ void interpret() {
 			
 		case 0x7:
 			// SUBN Vx, Vy
-			V[0xF] = (V[n3] > V[n2]) ? 1 : 0;
+			V[0xF] = (V[n3] > V[n2]) ? 0x1 : 0x0;
 			V[n2] = V[n3] - V[n2];
 			break;
 			
@@ -177,16 +219,24 @@ void interpret() {
 		
 	case 0xD:
 		// DRW Vx, Vy, nibble
+		uint16_t s = V[n3] * (64 * m_type) + V[n2];
+		uint8_t* i = I;
+		for (; i < I + n4; i++) {
+			V[0xF] &= (*i ^ framebuf[s + i - I] == 0) ? 0x1 : 0x0;
+			framebuf[s + i - I] ^= *i;
+		}
 		break;
 		
 	case 0xE:
-		switch (byte) {
+		switch (kk) {
 		case 0x9E:
 			// SKP Vx
+			if (get_key(V[n2])) pc += 2;
 			break;
 			
 		case 0xA1:
 			// SKNP Vx
+			if (!get_key(V[n2])) pc += 2;
 			break;
 			
 		default:
@@ -195,7 +245,7 @@ void interpret() {
 		break;
 		
 	case 0xF:
-		switch (byte) {
+		switch (kk) {
 		case 0x07:
 			// LD Vx, DT
 			V[n2] = dt;
@@ -203,6 +253,7 @@ void interpret() {
 			
 		case 0x0A:
 			// LD Vx, K
+			await_reg = n2;
 			break;
 			
 		case 0x15:
@@ -222,10 +273,14 @@ void interpret() {
 			
 		case 0x29:
 			// LD F, Vx
+			I = &mem + V[n2];
 			break;
 			
 		case 0x33:
 			// LD B, Vx
+			*i = V[n2] / 100;
+			*(i + 1) = (V[n2] % 100) / 10;
+			*(i + 2) = V[n2] % 10;
 			break;
 			
 		case 0x55:
@@ -247,4 +302,19 @@ void interpret() {
 	default:
 		debug("Unknown instruction: %X", instr);
 	}
+}
+
+void regen_frame_buffer(screen_type type) {
+	free(framebuf);
+	framebuf = malloc(sizeof(uint8_t) * 64 * 32 * type * type);
+}
+
+int is_awaiting_keystroke() {
+	return (await_reg < 0x10) ? 1 : 0;
+}
+
+void send_key(uint8_t key) {
+	check_debug(await_reg < 0x10, "Received key whilst not awaiting a keypress.");
+	V[await_reg] = key;
+	await_reg = 0x10;
 }
