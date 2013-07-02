@@ -11,7 +11,7 @@ const uint16_t scale = 0x4; // Display Scale
 const uint32_t tick_length = 1000 / 60; // milliseconds per tick
 
 int init() {
-    return SDL_Init(SDL_INIT_VIDEO);
+    return (SDL_Init(SDL_INIT_VIDEO) < 0) ? 0 : 1;
 }
 
 void setup(screen_type type) {
@@ -110,6 +110,9 @@ void update_screen(uint8_t *fb) {
 void update(uint8_t *fb) {
 	update_keys();
 	update_screen(fb);
+	check(SDL_GetError(), "Something went wrong: %s", SDL_GetError());
+error:
+	return;
 }
 
 void sync() {

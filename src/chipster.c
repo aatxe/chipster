@@ -1,3 +1,4 @@
+#include <SDL/SDL.h>
 #include <stdint.h>
 #include <unistd.h>
 #include "interpreter.h"

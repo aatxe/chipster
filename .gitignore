@@ -23,5 +23,6 @@ cmake_install.cmake
 install_manifest.txt
 *.ninja
 
-# binaries
+# binaries and roms
 chipster
+games/
