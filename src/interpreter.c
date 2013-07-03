@@ -12,6 +12,7 @@ uint8_t *I; // Memory-Access Register
 uint8_t V[0x10]; // Registers
 uint8_t dt, st; // Timers (Delay and Sound)
 uint8_t *framebuf; // Frame Buffer
+uint16_t bufsize; // size of the framebuffer
 screen_type m_type; // Screen Type
 await_key_register await_reg; // Awaiting Key Register, 0x10 if none.
 
@@ -46,6 +47,7 @@ int load(char *path) {
 	// Allocates frame buffer for rendering.
 	framebuf = (uint8_t*) malloc(sizeof(uint8_t) * 64 * 32);
 	check_mem(framebuf);
+	bufsize = sizeof(uint8_t) * 64 * 32;
 	
 	// Other initialization stuffs.
 	m_type = SCREEN_LOW;
@@ -63,6 +65,7 @@ void regen_frame_buffer(screen_type type) {
 	free(framebuf);
 	framebuf = malloc(sizeof(uint8_t) * 64 * 32 * type * type);
 	check_mem(framebuf);
+	bufsize = sizeof(uint8_t) * 64 * 32 * type * type;
 error:
 	return;
 }
@@ -89,6 +92,7 @@ void interpret() {
 	n3 = (instr >> 4) & 0xF;
 	n4 = instr & 0xF;
 	i = I;
+	debug("%X%X%X%X", n1, n2, n3, n4);
 	switch (n1) {
 	case 0x0:
 		switch (n2) {
@@ -98,14 +102,18 @@ void interpret() {
 				switch (n4) {
 				case 0x0:
 					// CLS
-					for (k = 0; k < sizeof(framebuf) / sizeof(uint8_t); k++) framebuf[k] = 0;
+					for (k = 0; k < bufsize; k++) framebuf[k] = 0;
 					break;
 					
 				case 0xE:
 					// RET
 					pc = stack[si--];
 					break;
+					
+				default:
+					debug("Unknown instruction: %X\n", instr);	
 				}
+				break;
 				
 			case 0xF:
 				switch (n4) {
@@ -130,6 +138,7 @@ void interpret() {
 				default:
 					debug("Unknown instruction: %X\n", instr);	
 				}
+				break;
 				
 			default:
 				debug("Unknown instruction: %X\n", instr);	
