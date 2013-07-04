@@ -324,7 +324,7 @@ void interpret() {
 			
 		case 0x29:
 			// LD F, Vx
-			I = (uint8_t*) &mem + V[n2];
+			I = (uint8_t*) &mem + (V[n2] * 5);
 			break;
 			
 		case 0x33:
