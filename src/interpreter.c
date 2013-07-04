@@ -54,6 +54,7 @@ int load(char *path) {
 	setup(m_type);
 	await_reg = 0x10;
 	pc = (uint16_t*) (&mem)->rom;
+	srand(time(NULL));
 	return 1;
 error:
 	fclose(rom);
@@ -77,11 +78,14 @@ void interpret() {
 	uint8_t kk;
 	uint8_t n1, n2, n3, n4;
 	// States used within certain instruction interpretations.
-	uint16_t s;
+	uint8_t x, y, nx, ny;
 	uint8_t* i;
 	uint16_t k;
 	instr = *pc >> 8 | *pc << 8;
 	pc++; // increment pc here because of jumps and stuff
+	// handle timers decrementing
+	if (dt > 0) dt--;
+	if (st > 0) st--;
 	// nnn is the last 12-bits of the instruction
 	nnn = instr & 0xFFF;
 	// kk is the last 8-bits of the instruction
@@ -146,7 +150,7 @@ void interpret() {
 			break;
 			
 			default:
-				// SYS addr
+				// SYS addr - purposefully ignored.
 				break;
 		}
 		break;
@@ -261,10 +265,10 @@ void interpret() {
 		
 	case 0xD:
 		// DRW Vx, Vy, nibble
-		s = V[n3] * (64 * m_type) + V[n2];
-		for (; i < I + n4; i++) {
-			V[0xF] &= ((*i ^ framebuf[s + i - I]) == 0) ? 0x1 : 0x0;
-			framebuf[s + i - I] ^= *i;
+		for (y = V[n3], ny = n4; ny; --ny, y = (y + 1) % (32 * m_type)) {
+			for (x = V[n2], nx = 8; nx; --nx, x = (x + 1) % (64 * m_type)) {
+				framebuf[y * (64 * m_type) + x] = (I[ny] >> (nx - 1)) & 1;
+			}
 		}
 		break;
 		
@@ -314,14 +318,14 @@ void interpret() {
 			
 		case 0x29:
 			// LD F, Vx
-			I = (uint8_t*) &mem + V[n2];
+			I = (uint8_t*) &mem + V[n2] - 1;
 			break;
 			
 		case 0x33:
 			// LD B, Vx
-			*I = V[n2] / 100;
-			*(I + 1) = (V[n2] % 100) / 10;
-			*(I + 2) = V[n2] % 10;
+			I[0] = V[n2] / 100;
+			I[1] = (V[n2] % 100) / 10;
+			I[2] = V[n2] % 10;
 			break;
 			
 		case 0x55:
@@ -332,6 +336,7 @@ void interpret() {
 		case 0x65:
 			// LD [Vx], I
 			for (; i < I + n2; i++) V[i - I] = *i;
+			break;
 			
 		default:
 			debug("Unknown instruction: %X\n", instr);
@@ -341,8 +346,6 @@ void interpret() {
 	default:
 		debug("Unknown instruction: %X\n", instr);
 	}
-	if (dt > 0) dt--;
-	if (st > 0) st--;
 }
 
 int is_awaiting_keystroke() {

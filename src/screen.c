@@ -24,13 +24,13 @@ void setup(screen_type type) {
 void update_keys() {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
-		int key_value = 0;
+		key_state key_value = KEY_UP;
 		switch (e.type) {
 		case SDL_QUIT:
 			exit(0);
 			break;
 		case SDL_KEYDOWN:
-			key_value = 1;
+			key_value = KEY_DOWN;
 		case SDL_KEYUP:
 			switch (e.key.keysym.sym) {
 			case SDLK_1:
