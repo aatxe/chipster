@@ -15,7 +15,7 @@ int init() {
 }
 
 void setup(screen_type type) {
-	SDL_Color Colors[2] = {{0, 0, 0, 255}, {255, 255, 255, 255}};
+	SDL_Color Colors[2] = {{0, 0, 0, 255}, {255, 255, 255, 255}}; // 0, 251, 52 for green.
 	screen = SDL_SetVideoMode(64 * scale * type, 32 * scale * type, 8, SDL_SWSURFACE);
 	SDL_SetColors(screen, Colors, 0, 2);
 	m_type = type;

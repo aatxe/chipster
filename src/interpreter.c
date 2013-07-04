@@ -38,7 +38,7 @@ int load(char *path) {
 		*d = font[d - (&mem)->interpreter];
 	
 	// Loads specified ROM into program space.
-	rom = fopen(path, "r");
+	rom = fopen(path, "rb");
 	check(rom != NULL, "Failed to load ROM: %s\n", path);
 	p = (&mem)->rom;
 	while(fread(p++, sizeof(uint8_t), 1, rom));
