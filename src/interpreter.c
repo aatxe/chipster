@@ -45,7 +45,7 @@ int load(char *path) {
 	fclose(rom);
 	
 	// Allocates frame buffer for rendering.
-	framebuf = (uint8_t*) malloc(sizeof(uint8_t) * 64 * 32);
+	framebuf = (uint8_t*) calloc(1, sizeof(uint8_t) * 64 * 32);
 	check_mem(framebuf);
 	bufsize = sizeof(uint8_t) * 64 * 32;
 	
@@ -83,6 +83,7 @@ void interpret() {
 	uint16_t k;
 	instr = *pc >> 8 | *pc << 8;
 	pc++; // increment pc here because of jumps and stuff
+	check(pc >= (uint16_t*) (&mem)->rom && pc <= (uint16_t*) ((uint8_t*) &mem + 4096), "Instruction out of program bounds: %x (%x)", instr, (int) pc);
 	// handle timers decrementing
 	if (dt > 0) dt--;
 	if (st > 0) st--;
@@ -111,7 +112,7 @@ void interpret() {
 					
 				case 0xE:
 					// RET
-					pc = stack[si--];
+					pc = stack[--si];
 					break;
 					
 				default:
@@ -203,6 +204,11 @@ void interpret() {
 			V[n2] |= V[n3];
 			break;
 			
+		case 0x2:
+			// AND Vx, Vy
+			V[n2] &= V[n3];
+			break;
+			
 		case 0x3:
 			// XOR Vx, Vy
 			V[n2] ^= V[n3]; 
@@ -265,7 +271,7 @@ void interpret() {
 		
 	case 0xD:
 		// DRW Vx, Vy, nibble
-		for (y = V[n3], ny = 0; ny < n4;++ny, y = (y + 1) % (32 * m_type)) {
+		for (y = V[n3], ny = 0; ny < n4; ++ny, y = (y + 1) % (32 * m_type)) {
 			for (x = V[n2], nx = 8; nx; --nx, x = (x + 1) % (64 * m_type)) {
 				framebuf[y * (64 * m_type) + x] = (I[ny] >> (nx - 1)) & 1;
 			}
@@ -346,6 +352,8 @@ void interpret() {
 	default:
 		debug("Unknown instruction: %X\n", instr);
 	}
+error:
+	return;
 }
 
 int is_awaiting_keystroke() {
