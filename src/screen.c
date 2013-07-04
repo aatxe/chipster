@@ -4,7 +4,7 @@
 
 SDL_Surface* screen;
 screen_type m_type;
-key_state keys[0x10];
+key_state keys[0x11];
 uint32_t last_updated;
 
 const uint16_t scale = 0x4; // Display Scale
@@ -34,16 +34,16 @@ void update_keys() {
 		case SDL_KEYUP:
 			switch (e.key.keysym.sym) {
 			case SDLK_1:
-				keys[0x0] = key_value;
-				break;
-			case SDLK_2:
 				keys[0x1] = key_value;
 				break;
-			case SDLK_3:
+			case SDLK_2:
 				keys[0x2] = key_value;
 				break;
-			case SDLK_4:
+			case SDLK_3:
 				keys[0x3] = key_value;
+				break;
+			case SDLK_4:
+				keys[0xC] = key_value;
 				break;
 			case SDLK_q:
 				keys[0x4] = key_value;
@@ -55,28 +55,28 @@ void update_keys() {
 				keys[0x6] = key_value;
 				break;
 			case SDLK_r:
-				keys[0x7] = key_value;
-				break;
-			case SDLK_a:
-				keys[0x8] = key_value;
-				break;
-			case SDLK_s:
-				keys[0x9] = key_value;
-				break;
-			case SDLK_d:
-				keys[0xA] = key_value;
-				break;
-			case SDLK_f:
-				keys[0xB] = key_value;
-				break;
-			case SDLK_z:
-				keys[0xC] = key_value;
-				break;
-			case SDLK_x:
 				keys[0xD] = key_value;
 				break;
-			case SDLK_c:
+			case SDLK_a:
+				keys[0x7] = key_value;
+				break;
+			case SDLK_s:
+				keys[0x8] = key_value;
+				break;
+			case SDLK_d:
+				keys[0x9] = key_value;
+				break;
+			case SDLK_f:
 				keys[0xE] = key_value;
+				break;
+			case SDLK_z:
+				keys[0xA] = key_value;
+				break;
+			case SDLK_x:
+				keys[0x0] = key_value;
+				break;
+			case SDLK_c:
+				keys[0xB] = key_value;
 				break;
 			case SDLK_v:
 				keys[0xF] = key_value;
