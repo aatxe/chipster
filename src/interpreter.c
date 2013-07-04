@@ -265,7 +265,7 @@ void interpret() {
 		
 	case 0xD:
 		// DRW Vx, Vy, nibble
-		for (y = V[n3], ny = n4; ny; --ny, y = (y + 1) % (32 * m_type)) {
+		for (y = V[n3], ny = 0; ny < n4;++ny, y = (y + 1) % (32 * m_type)) {
 			for (x = V[n2], nx = 8; nx; --nx, x = (x + 1) % (64 * m_type)) {
 				framebuf[y * (64 * m_type) + x] = (I[ny] >> (nx - 1)) & 1;
 			}
@@ -318,7 +318,7 @@ void interpret() {
 			
 		case 0x29:
 			// LD F, Vx
-			I = (uint8_t*) &mem + V[n2] - 1;
+			I = (uint8_t*) &mem + V[n2];
 			break;
 			
 		case 0x33:
