@@ -11,3 +11,4 @@ aux_source_directory(./src CHIPSTER_SOURCES)
 
 add_executable(chipster ${CHIPSTER_SOURCES})
 target_link_libraries(chipster ${SDL_LIBRARY})
+install(TARGETS chipster DESTINATION bin)
