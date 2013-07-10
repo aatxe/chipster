@@ -23,6 +23,8 @@ typedef uint8_t await_key_register;
 
 int load(char *path);
 void interpret();
+int get_dt();
+void update_timers();
 int is_awaiting_keystroke();
 void send_key(uint8_t key);
 

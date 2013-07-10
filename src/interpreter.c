@@ -83,10 +83,8 @@ void interpret() {
 	uint16_t k;
 	instr = *pc >> 8 | *pc << 8;
 	pc++; // increment pc here because of jumps and stuff
+	// performs a simple security check to make sure program instructions are in-bounds
 	check(pc >= (uint16_t*) (&mem)->rom && pc <= (uint16_t*) ((uint8_t*) &mem + 4096), "Instruction out of program bounds: %x (%x)", instr, (int) pc);
-	// handle timers decrementing
-	if (dt > 0) dt--;
-	if (st > 0) st--;
 	// nnn is the last 12-bits of the instruction
 	nnn = instr & 0xFFF;
 	// kk is the last 8-bits of the instruction
@@ -354,6 +352,15 @@ void interpret() {
 	}
 error:
 	return;
+}
+
+int get_dt() {
+	return dt;
+}
+
+void update_timers() {
+	if (dt > 0) dt--;
+	if (st > 0) st--;
 }
 
 int is_awaiting_keystroke() {
