@@ -12,8 +12,7 @@ void chipster_st() {
 			uint8_t i;
 			for (i = 0; i < 0x10; i++) if (get_key(i)) send_key(i);
 		} else {
-			if (!get_dt())
-				interpret();
+			if (!get_dt()) interpret();
 			update_timers();
 			update(framebuf);
 			sync();
