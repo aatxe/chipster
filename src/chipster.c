@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
 	int rom_index = 1, mt = 0;
 	if (!strcmp(argv[1], "--test")) return 0; // just a simple test to see if installed.
 	if (!strcmp(argv[1], "-mt")) {
+		debug("chipster is running in multithreaded mode.");
 		rom_index++;
 		mt = 1;
-		debug("chipster is running in multithreaded mode.");
 	}
 	check_user(argc >= rom_index + 1, "%s: you must supply a ROM argument!\n", argv[0]);
 	check_user(access(argv[rom_index], R_OK) != -1, "%s: could not find ROM: %s\n", argv[0], argv[rom_index]);
