@@ -33,14 +33,14 @@ int load(char *path) {
 	uint8_t * p;
 	
 	// Loads fonts into interpreter space.
-	uint8_t* d = (&mem)->interpreter;
-	for (; d < (&mem)->interpreter + 0x50; d++)
-		*d = font[d - (&mem)->interpreter];
+	uint8_t* d = mem.interpreter;
+	for (; d < mem.interpreter + 0x50; d++)
+		*d = font[d - mem.interpreter];
 	
 	// Loads specified ROM into program space.
 	rom = fopen(path, "rb");
 	check(rom != NULL, "Failed to load ROM: %s\n", path);
-	p = (&mem)->rom;
+	p = mem.rom;
 	while(fread(p++, sizeof(uint8_t), 1, rom));
 	fclose(rom);
 	
@@ -53,7 +53,7 @@ int load(char *path) {
 	m_type = SCREEN_LOW;
 	setup(m_type);
 	await_reg = 0x10;
-	pc = (uint16_t*) (&mem)->rom;
+	pc = (uint16_t*) mem.rom;
 	srand(time(NULL));
 	return 1;
 error:
@@ -68,7 +68,8 @@ void regen_frame_buffer(screen_type type) {
 	check_mem(framebuf);
 	bufsize = sizeof(uint8_t) * 64 * 32 * type * type;
 error:
-	return;
+	log_err("Failed to regenerate frame buffer.");
+	exit(1);
 }
 
 void interpret() {
@@ -84,7 +85,7 @@ void interpret() {
 	instr = *pc >> 8 | *pc << 8;
 	pc++; // increment pc here because of jumps and stuff
 	// performs a simple security check to make sure program instructions are in-bounds
-	check(pc >= (uint16_t*) (&mem)->rom && pc <= (uint16_t*) ((uint8_t*) &mem + 4096), "Instruction out of program bounds: %x (%x)", instr, (int) pc);
+	check(pc >= (uint16_t*) mem.rom && pc <= (uint16_t*) ((uint8_t*) &mem + 4096), "Instruction out of program bounds: %x (%x)", instr, (int) pc);
 	// nnn is the last 12-bits of the instruction
 	nnn = instr & 0xFFF;
 	// kk is the last 8-bits of the instruction

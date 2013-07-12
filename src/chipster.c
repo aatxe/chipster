@@ -6,7 +6,7 @@
 #include "screen.h"
 
 void chipster_st() {
-	for (;;) {
+	forever {
 		if (is_awaiting_keystroke()) {
 			update_keys();
 			uint8_t i;
@@ -22,7 +22,7 @@ void chipster_st() {
 }
 
 int interpreter_thread() {
-	for (;;) {
+	forever {
 		if (is_awaiting_keystroke()) {
 			update_keys();
 			uint8_t i;
@@ -35,7 +35,7 @@ int interpreter_thread() {
 }
 
 int main_thread() {
-	for (;;) { 
+	forever { 
 		update_timers();
 		update(framebuf);
 		sync();
